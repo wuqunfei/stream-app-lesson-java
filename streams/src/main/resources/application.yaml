@@ -1,5 +1,14 @@
 spring:
+  application:
+    name: Kafka-java-stream
   docker:
     compose:
       enabled: true
       file: docker-compose-redpanda.yaml
+  kafka:
+    bootstrap-servers: localhost:19092
+    streams:
+      bootstrap-servers: localhost:19092
+      application-id: word-counter-stream
+
+

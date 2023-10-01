@@ -46,8 +46,6 @@ public class WordCounterApp {
         KStream<String, String> textLines = builder.stream(inputTopicName, Consumed.with(Serdes.String(), stringSerde));
         KTable<String, Long> wordCounts = textLines
                 // Split each text line, by whitespace, into words.  The text lines are the message
-                // values, i.e. we can ignore whatever data is in the message keys and thus invoke
-                // `flatMapValues` instead of the more generic `flatMap`.
                 .flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
                 // We use `groupBy` to ensure the words are available as message keys
                 .groupBy((key, value) -> value)
