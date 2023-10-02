@@ -15,14 +15,18 @@ import java.util.Arrays;
 
 @Component
 public class WordCounterProcessor {
+
+    public static final String INPUT_TOPIC = "input-topic";
+    public static final String OUTPUT_TOPIC = "output-topic";
+
     @Autowired
     void process(StreamsBuilder builder) {
-        KStream<String, String> inputStream = builder.stream("input-topic", Consumed.with(Serdes.String(), Serdes.String()));
+        KStream<String, String> inputStream = builder.stream(INPUT_TOPIC, Consumed.with(Serdes.String(), Serdes.String()));
         KTable<String, Long> wordCounts = inputStream
                 .flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
                 .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
                 .count(Materialized.as("counter-store"));
         KStream<String, Long> outputStream = wordCounts.toStream();
-        outputStream.to("output-topic", Produced.with(Serdes.String(), Serdes.Long()));
+        outputStream.to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
     }
 }
