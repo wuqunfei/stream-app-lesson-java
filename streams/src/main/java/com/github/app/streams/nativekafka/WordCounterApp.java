@@ -46,17 +46,11 @@ public class WordCounterApp {
 
     public static Topology createTopology() {
         final StreamsBuilder builder = new StreamsBuilder();
-
         final KStream<String, String> textLines = builder.stream(INPUT_TOPIC);
-
         final Pattern pattern = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
-
         final KTable<String, Long> wordCounts = textLines
-
                 .flatMapValues(value -> Arrays.asList(pattern.split(value.toLowerCase())))
-
                 .groupBy((keyIgnored, word) -> word)
-
                 .count();
         wordCounts.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
         return builder.build();
