@@ -1,6 +1,5 @@
 package com.github.app.streams.springkafka;
 
-import com.github.app.streams.springkafka.WordCounterProcessor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
