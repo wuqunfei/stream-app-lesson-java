@@ -1,6 +1,6 @@
 spring:
   application:
-    name: Kafka-java-stream
+    name: spring-kafka-app
   docker:
     compose:
       enabled: true
@@ -10,5 +10,23 @@ spring:
     streams:
       bootstrap-servers: localhost:19092
       application-id: word-counter-stream
+
+  cloud:
+    function:
+      definition: wordProcess
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:19092
+        streams:
+          binder:
+            application-id: spring-cloud-app
+      bindings:
+        wordProcess-in-0:
+          destination: input-word-process
+        wordProcess-out-0:
+          destination: output-word-process
+
+
 
 

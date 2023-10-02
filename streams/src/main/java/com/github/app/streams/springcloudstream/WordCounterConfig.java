@@ -1,13 +1,19 @@
 package com.github.app.streams.springcloudstream;
 
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Grouped;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.Arrays;
 import java.util.function.Function;
 
-public class WordCounterFunction {
+@Configuration
+public class WordCounterConfig {
 
     private static KStream<String, Long> apply(KStream<String, String> stream) {
 
@@ -20,7 +26,7 @@ public class WordCounterFunction {
     }
 
     @Bean
-    public Function<KStream<String, String>, KStream<String, Long>> process() {
-        return WordCounterFunction::apply;
+    public Function<KStream<String, String>, KStream<String, Long>> wordProcess() {
+        return WordCounterConfig::apply;
     }
 }
