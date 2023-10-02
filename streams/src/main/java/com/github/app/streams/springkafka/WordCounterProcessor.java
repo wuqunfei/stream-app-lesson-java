@@ -8,7 +8,6 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.ValueMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,16 +16,13 @@ import java.util.Arrays;
 @Component
 public class WordCounterProcessor {
     @Autowired
-    void process(StreamsBuilder streamsBuilder) {
-        KStream<String, String> inputStream = streamsBuilder
-                .stream("input-topic", Consumed.with(Serdes.String(), Serdes.String()));
-
+    void process(StreamsBuilder builder) {
+        KStream<String, String> inputStream = builder.stream("input-topic", Consumed.with(Serdes.String(), Serdes.String()));
         KTable<String, Long> wordCounts = inputStream
-                .mapValues((ValueMapper<String, String>) String::toLowerCase)
-                .flatMapValues(value -> Arrays.asList(value.split("\\W+")))
+                .flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
                 .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
                 .count(Materialized.as("counter-store"));
-
-        wordCounts.toStream().to("output-topic", Produced.with(Serdes.String(), Serdes.Long()));
+        KStream<String, Long> outputStream = wordCounts.toStream();
+        outputStream.to("output-topic", Produced.with(Serdes.String(), Serdes.Long()));
     }
 }

@@ -9,11 +9,18 @@ import java.util.function.Function;
 
 public class WordCounterFunction {
 
-    @Bean
-    public Function<KStream<String, String>, KTable<String, Long>> process() {
-        return stream -> stream.mapValues((ValueMapper<String, String>) String::toLowerCase)
-                .flatMapValues(value -> Arrays.asList(value.split("\\W+")))
+    private static KStream<String, Long> apply(KStream<String, String> stream) {
+
+        KTable<String, Long> counterTable = stream.flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
                 .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
                 .count(Materialized.as("counter-store"));
+        KStream<String, Long> outputStream = counterTable.toStream();
+        outputStream.to("output-topic", Produced.with(Serdes.String(), Serdes.Long()));
+        return outputStream;
+    }
+
+    @Bean
+    public Function<KStream<String, String>, KStream<String, Long>> process() {
+        return WordCounterFunction::apply;
     }
 }
