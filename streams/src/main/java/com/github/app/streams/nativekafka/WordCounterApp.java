@@ -6,18 +6,15 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Produced;
 
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 public class WordCounterApp {
-
-    static final String INPUT_TOPIC = "input-native-topic";
-    static final String OUTPUT_TOPIC = "output-native-topic";
 
 
     public static void main(final String[] args) {
@@ -29,7 +26,6 @@ public class WordCounterApp {
             Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
             streams.start();
         }
-
     }
 
     public static Properties createProperties() {
@@ -45,14 +41,17 @@ public class WordCounterApp {
     }
 
     public static Topology createTopology() {
+        final String inputTopic = "input-native-topic";
+        final String outputTopic = "output-native-topic";
         final StreamsBuilder builder = new StreamsBuilder();
-        final KStream<String, String> textLines = builder.stream(INPUT_TOPIC);
-        final Pattern pattern = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
+        final KStream<String, String> textLines = builder.stream(inputTopic);
         final KTable<String, Long> wordCounts = textLines
-                .flatMapValues(value -> Arrays.asList(pattern.split(value.toLowerCase())))
-                .groupBy((keyIgnored, word) -> word)
+                .flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
+                .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
                 .count();
-        wordCounts.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+        final KStream<String, Long> outputStream = wordCounts.toStream();
+        outputStream.peek((word, counter) -> System.out.println(word + ":" + counter))
+                .to(outputTopic, Produced.with(Serdes.String(), Serdes.Long()));
         return builder.build();
     }
 
